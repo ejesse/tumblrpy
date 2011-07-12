@@ -59,7 +59,22 @@ class TumblrAPI():
         return response_text
     
     def __get_key_authenticated__(self,endpoint,data):
-        pass
+        try:
+            data['api_key'] = self.authenticator.oauth_consumer_key
+        except:
+            raise TumblrError('This method requires instantiating the TumblrAPI with an oauth_consumer_key and secret_key or a TumblrAuthenticator')
+        params = urllib.urlencode(data)
+        full_uri = "%s?%s" % (endpoint,params)
+        try:
+            response = urllib2.urlopen(full_uri)
+        except urllib2.HTTPError, e:
+            raise TumblrError(e.__str__())
+        response_text = response.read()
+        response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
+        if self.print_json:
+            print response_text
+        self.__check_for_tumblr_error__(response_text)
+        return response_text
     
     def __get_oauth_authenticated__(self,endpoint,data):
         pass
@@ -74,4 +89,13 @@ class TumblrAPI():
         pass
     
     def get_blog_info(self,blog_name):
-        pass
+        if (blog_name is None):
+            raise TumblrError("please pass in a blog name (e.g. ejesse.tumblr.com)")
+        
+        parameters = {}
+        
+        endpoint = self.api_base + '/blog/' + blog_name + '/info'
+        
+        returned_json = self.__get_key_authenticated__(endpoint, parameters)
+        ## TODO FIXME transform it to an object!
+        return returned_json
