@@ -8,8 +8,9 @@ class TumblrAPITest(unittest.TestCase):
         self.api = TumblrAPI(oauth_consumer_key, secret_key)
     
     def test_blog_info(self):
-        blog_name = 'ejesse.tumblr.com'
-        blog = self.api.get_blog_info(blog_name)
+        blog_name = 'ejesse'
+        blog_domain_name = blog_name + '.tumblr.com'
+        blog = self.api.get_blog_info(blog_domain_name)
         self.assertEqual(blog.name, blog_name)
 
 if __name__ == '__main__':

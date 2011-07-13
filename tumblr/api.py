@@ -3,7 +3,7 @@ import urllib
 import urllib2
 from tumblr.errors import TumblrError
 from tumblr.utils import to_unicode_or_bust
-
+from tumblr.objects import Blog
 
 REQUEST_TOKEN_URL = 'http://www.tumblr.com/oauth/request_token'
 AUTHORIZE_URL = 'http://www.tumblr.com/oauth/authorize'
@@ -97,5 +97,6 @@ class TumblrAPI():
         endpoint = self.api_base + '/blog/' + blog_name + '/info'
         
         returned_json = self.__get_key_authenticated__(endpoint, parameters)
-        ## TODO FIXME transform it to an object!
-        return returned_json
+        blog_dict = simplejson.loads(returned_json)
+        blog = Blog(api=self,data_dict=blog_dict['response'])
+        return blog
