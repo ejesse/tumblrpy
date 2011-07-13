@@ -4,19 +4,8 @@ import urllib2
 from tumblr.errors import TumblrError
 from tumblr.utils import to_unicode_or_bust
 from tumblr.objects import Blog
+from tumblr.authentication import TumblrAuthenticator
 
-REQUEST_TOKEN_URL = 'http://www.tumblr.com/oauth/request_token'
-AUTHORIZE_URL = 'http://www.tumblr.com/oauth/authorize'
-ACCESS_TOKEN_URL = 'http://www.tumblr.com/oauth/access_token'
-
-class TumblrAuthenticator():
-
-    oauth_consumer_key=None
-    secret_key=None
-
-    def __init__(self,oauth_consumer_key,secret_key):
-        self.oauth_consumer_key=oauth_consumer_key
-        self.secret_key=secret_key
 
 class TumblrAPI():
     
@@ -39,12 +28,12 @@ class TumblrAPI():
         result = simplejson.loads(json)
         if result.has_key('meta'):
             if result['meta'].has_key('status'):
-                if int(result['meta']['status']) != 200:
+                if int(result['meta']['status']) >= 400:
                     if result['meta'].has_key('msg'): 
                         error_text = result['meta']['msg']
                     raise TumblrError('An error was returned from Tumblr API: %s' % (error_text))    
 
-    def __get_unauthenticated__(self,endpoint,data):
+    def __get_request_unauthenticated__(self,endpoint,data):
         params = urllib.urlencode(data)
         full_uri = "%s?%s" % (endpoint,params)
         try:
@@ -58,7 +47,7 @@ class TumblrAPI():
         self.__check_for_tumblr_error__(response_text)
         return response_text
     
-    def __get_key_authenticated__(self,endpoint,data):
+    def __get_request_key_authenticated__(self,endpoint,data):
         try:
             data['api_key'] = self.authenticator.oauth_consumer_key
         except:
@@ -76,16 +65,16 @@ class TumblrAPI():
         self.__check_for_tumblr_error__(response_text)
         return response_text
     
-    def __get_oauth_authenticated__(self,endpoint,data):
+    def __get_request_oauth_authenticated__(self,endpoint,data):
         pass
     
-    def __post_unauthenticated__(self,endpoint,data):
+    def __post_request_unauthenticated__(self,endpoint,data):
         pass
     
-    def __post_key_authenticated__(self,endpoint,data):
+    def __post_request_key_authenticated__(self,endpoint,data):
         pass
     
-    def __post_oauth_authenticated__(self,endpoint,data):
+    def __post_request_oauth_authenticated__(self,endpoint,data):
         pass
     
     def get_blog_info(self,blog_name):
