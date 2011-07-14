@@ -1,7 +1,11 @@
 import datetime
 
-class TumblrObject():
-    pass
+class TumblrObject(object):
+    api=None
+    
+    def __init__(self,api=None):
+        if api is not None:
+            self.api = api
 
 class TumblrUser(TumblrObject):
     pass
@@ -30,13 +34,35 @@ class Blog(TumblrObject):
             except:
                 pass
             self.likes = blog['likes']
+        super(Blog,self).__init__(api=api)
             
     def get_posts(self):
         ## TODO FIXME go and get posts for the blog
         pass
 
 class Post(TumblrObject):
-    pass
+    
+    blog_name=None
+    id=None
+    post_url=None
+    type=None
+    timestamp=None
+    date=None
+    format=None
+    reblog_key=None
+    tags=None
+    bookmarket=False
+    mobile=False
+    source_url=None
+    source_title=None
+    total_posts=None
+
+    def __init__(self,api=None,data_dict=None):
+        if data_dict is not None:
+            post = data_dict['post']
+            self.blog_name = post['blog-name']
+            
+        super(Post,self).__init__(api=api)
 
 class TextPost(Post):
     pass

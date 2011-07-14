@@ -5,6 +5,7 @@ from tumblr.errors import TumblrError
 from tumblr.utils import to_unicode_or_bust
 from tumblr.objects import Blog
 from tumblr.authentication import TumblrAuthenticator
+import logging
 
 
 class TumblrAPI():
@@ -21,6 +22,7 @@ class TumblrAPI():
         if oauth_consumer_key is not None and secret_key is not None and authenticator is not None:
             raise TumblrError("You don't need to pass in the consumer key, the secret and an authenticator. Either the keys OR an authenticator. Thanks, I get confused if you pass me all three.")
         if oauth_consumer_key is not None and secret_key is not None and authenticator is None:
+            logging.info('Instantiating TumblrAuthenticator from supplied key and secret')
             self.authenticator = TumblrAuthenticator(oauth_consumer_key,secret_key)
 
     def __check_for_tumblr_error__(self,json):
