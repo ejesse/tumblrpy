@@ -1,4 +1,4 @@
-
+import datetime
 
 class TumblrObject():
     pass
@@ -22,7 +22,7 @@ class Blog(TumblrObject):
             self.title = blog['title']
             self.num_posts = blog['posts']
             self.name = blog['name']
-            self.updated = blog['updated']
+            self.updated = datetime.datetime.fromtimestamp(blog['updated'])
             self.description = blog['description']
             self.ask = blog['ask']
             try:
@@ -30,8 +30,36 @@ class Blog(TumblrObject):
             except:
                 pass
             self.likes = blog['likes']
+            
+    def get_posts(self):
+        ## TODO FIXME go and get posts for the blog
+        pass
 
 class Post(TumblrObject):
+    pass
+
+class TextPost(Post):
+    pass
+
+class PhotoPost(Post):
+    pass
+
+class QuotePost(Post):
+    pass
+
+class LinkPost(Post):
+    pass
+
+class ChatPost(Post):
+    pass
+
+class AudioPost(Post):
+    pass
+
+class VideoPost(Post):
+    pass
+
+class AnswerPost(Post):
     pass
 
 class Avatar(TumblrObject):
