@@ -3,7 +3,9 @@ import time
 import oauth.oauth as oauth
 from urllib2 import Request, urlopen
 from tumblr.errors import TumblrError
+import logging
 
+log = logging.getLogger('tumblr')
 
 REQUEST_TOKEN_URL = 'http://www.tumblr.com/oauth/request_token'
 AUTHORIZE_URL = 'http://www.tumblr.com/oauth/authorize'

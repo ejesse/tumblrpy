@@ -1,6 +1,6 @@
 
 
-class TumblrError(RuntimeError):
+class TumblrError(Exception):
     """Generic exception class."""
     def __init__(self, value):
         self.value = value
