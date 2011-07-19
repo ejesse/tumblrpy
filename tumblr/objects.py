@@ -111,6 +111,9 @@ class Post(TumblrObject):
     source_url=None
     source_title=None
     total_posts=None
+    ## submission only fields
+    tweet=False
+    markdown=False
 
     def __init__(self,api=None,data_dict=None):
         if data_dict is not None:
@@ -135,6 +138,7 @@ class Post(TumblrObject):
 
 class TextPost(Post):
     
+    type='text'
     title=None
     body=None
     
@@ -155,6 +159,11 @@ class PhotoPost(Post):
     width=None
     height=None
     
+    ## submission fields
+    link=None
+    source=None
+    data=None
+    
     def __init__(self,api=None,data_dict=None):
         
         if data_dict is not None:
@@ -174,11 +183,20 @@ class PhotoPost(Post):
     
     def __string__(self):
         return self.caption
+    
+#    def save(self):
+#        if self.api is None:
+#            log.error("No API instance passed into object, so I can't save, did you work around the API?")
+#        self.api.
 
 class QuotePost(Post):
     
+    type='quote'
     text=None
     source=None
+    
+    ## submission fields
+    quote=None
     
     def __init__(self,api=None,data_dict=None):
         if data_dict is not None:
@@ -192,6 +210,7 @@ class QuotePost(Post):
 
 class LinkPost(Post):
     
+    type='link'
     title=None
     url=None
     description=None
@@ -209,6 +228,7 @@ class LinkPost(Post):
     
 class ChatPost(Post):
     
+    type='chat'
     title=None
     body=None
     dialogue=None
@@ -223,8 +243,10 @@ class ChatPost(Post):
         
     def __string__(self):
         return self.title
+    
 class AudioPost(Post):
     
+    type='audio'
     caption=None
     player=None
     plays=None
@@ -254,6 +276,7 @@ class AudioPost(Post):
     
 class VideoPost(Post):
     
+    type='video'
     caption=None
     body=None
     

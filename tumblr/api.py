@@ -50,18 +50,27 @@ class TumblrAPI():
         self.__check_for_tumblr_error__(response_text)
         return response_text
     
-    def __get_request_key_authenticated__(self,endpoint,data):
+    def __make_authenticated_request__(self,endpoint,data,method):
         try:
             data['api_key'] = self.authenticator.oauth_consumer_key
         except:
             raise TumblrError('This method requires instantiating the TumblrAPI with an oauth_consumer_key and secret_key or a TumblrAuthenticator')
-        params = urllib.urlencode(data)
-        full_uri = "%s?%s" % (endpoint,params)
-        log.debug('%s %s' % ('making request to',full_uri))
-        try:
-            response = urllib2.urlopen(full_uri)
-        except urllib2.HTTPError, e:
-            raise TumblrError(e.__str__())
+        if method.lower() is 'get':
+            params = urllib.urlencode(data)
+            full_uri = "%s?%s" % (endpoint,params)
+            log.debug('%s %s' % ('making request to',full_uri))
+            try:
+                response = urllib2.urlopen(full_uri)
+            except urllib2.HTTPError, e:
+                raise TumblrError(e.__str__())
+        else:
+            request = urllib2.Request(endpoint, data)
+            if method.lower() is not 'post':
+                log.info('making request via %s' % (method))
+                request.get_method = lambda: method
+            log.debug('making %s request to %s with parameters %s' % (method,endpoint,data))
+            response = urllib2.urlopen(request)
+            
         response_text = response.read()
         response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
         if self.print_json:
@@ -69,17 +78,38 @@ class TumblrAPI():
         self.__check_for_tumblr_error__(response_text)
         return response_text
     
+    def __get_request_key_authenticated__(self,endpoint,data):
+        return self.__make_authenticated_request__(self,endpoint,data,'GET')
+    
+    def __make_oauth_request(self,endpoint,data,method):
+        try:
+            access_token = self.authenticator.access_token
+        except:
+            raise TumblrError('This method requires obtaining and access token')
+        #params = urllib.urlencode(data)
+        log.debug('making %s request to %s with parameters %s' % (method,endpoint,data))
+        try:
+            response_text = self.authenticator.make_oauth_request(endpoint, method, parameters=data)
+        except TumblrError, e:
+            log.error('Error mamking OAuth request: %s' % (e))
+        
+        response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
+        if self.print_json:
+            print response_text
+        self.__check_for_tumblr_error__(response_text)
+        return response_text
+    
     def __get_request_oauth_authenticated__(self,endpoint,data):
-        pass
+        return self.__make_oauth_request(endpoint, data, 'GET')
     
     def __post_request_unauthenticated__(self,endpoint,data):
         pass
     
     def __post_request_key_authenticated__(self,endpoint,data):
-        pass
+        return self.__make_authenticated_request__(self,endpoint,data,'GET')
     
     def __post_request_oauth_authenticated__(self,endpoint,data):
-        pass
+        return self.__make_oauth_request(endpoint, data, 'POST')
     
     def get_blog_info(self,blog_name):
         if (blog_name is None):
@@ -179,4 +209,6 @@ class TumblrAPI():
                 
         
         return posts
+    
+    def update_edit_post(self,post):
         
