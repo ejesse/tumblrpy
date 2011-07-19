@@ -120,6 +120,20 @@ class TumblrAPI():
     def __post_request_oauth_authenticated__(self,endpoint,data):
         return self.__make_oauth_request(endpoint, data, 'POST')
     
+    def get_access_token(self,verifier=None):
+        """ convenience method """
+        if verifier is None:
+            raise TumblrError("Can't get an access token without a verifier")
+        return self.authenticator.get_access_token(verifier=verifier)
+    
+    def get_user_info(self):
+        if self.authenticator.access_token is None:
+            raise TumblrError("User info method requires a valid access token")
+        
+        endpoint = self.api_base + '/user/info'
+        
+        r = self.__get_request_oauth_authenticated__(endpoint, {})
+    
     def get_blog_info(self,blog_name):
         if (blog_name is None):
             raise TumblrError("please pass in a blog name (e.g. ejesse.tumblr.com)")
@@ -138,7 +152,7 @@ class TumblrAPI():
     def get_blog(self,blog_name):
         return self.get_blog_info(blog_name)
     
-    def get_posts(self,blog_name, type=None,id=None,tag=None,limit=None,offset=None,rebog_info=None,notes_info=None,format=None):
+    def get_posts(self,blog_name, type=None,id=None,tag=None,limit=None,offset=None,reblog_info=None,notes_info=None,format=None):
         if (blog_name is None):
             raise TumblrError("please pass in a blog name (e.g. ejesse.tumblr.com)")
         
@@ -152,8 +166,8 @@ class TumblrAPI():
             parameters['limit'] = limit
         if offset is not None:
             parameters['offset'] = offset
-        if rebog_info is not None:
-            parameters['rebog_info'] = rebog_info
+        if reblog_info is not None:
+            parameters['rebog_info'] = reblog_info
         if notes_info is not None:
             parameters['notes_info'] = notes_info
         if format is not None:

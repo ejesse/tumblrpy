@@ -1,6 +1,6 @@
 import httplib
 import time
-import oauth.oauth as oauth
+import oauth2 as oauth
 from urllib2 import Request, urlopen
 from tumblr.errors import TumblrError
 import logging
@@ -18,7 +18,7 @@ BASE_SERVER = 'www.tumblr.com:80'
 #BASE_SERVER = 'https://api.twitter.com:443'
 
 
-class TumblrAuthenticator(oauth.OAuthClient):
+class TumblrAuthenticator(oauth.Client):
 
     oauth_consumer_key=None
     secret_key=None
@@ -29,12 +29,12 @@ class TumblrAuthenticator(oauth.OAuthClient):
     request_token = None
     access_token = None
     consumer = None
-    signature_method = oauth.OAuthSignatureMethod_HMAC_SHA1()
+    signature_method = oauth.SignatureMethod_HMAC_SHA1()
 
     def __init__(self,oauth_consumer_key,secret_key,access_token=None):
         self.oauth_consumer_key=oauth_consumer_key
         self.secret_key=secret_key
-        self.consumer = oauth.OAuthConsumer(self.oauth_consumer_key, self.secret_key)
+        self.consumer = oauth.Consumer(self.oauth_consumer_key, self.secret_key)
         self.connection = httplib.HTTPConnection(BASE_SERVER)
         if access_token is not None:
             self.access_token = access_token
@@ -44,7 +44,7 @@ class TumblrAuthenticator(oauth.OAuthClient):
             self.authorize_url = self.get_authorization_url()
 
     def get_authorization_url(self):
-        request = oauth.OAuthRequest.from_token_and_callback(token=self.request_token, http_url=self.authorization_url_base)
+        request = oauth.Request.from_token_and_callback(token=self.request_token, http_url=self.authorization_url_base)
 
         return request.to_url()
 
@@ -53,11 +53,11 @@ class TumblrAuthenticator(oauth.OAuthClient):
         Get the URL that the user can use to approve the request
         """
         url = self.request_token_url
-        request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, http_url=url)
+        request = oauth.Request.from_consumer_and_token(self.consumer, http_url=url)
         request.sign_request(self.signature_method, self.consumer, None)
         resp = urlopen(Request(url, headers=request.to_header()))
         out = resp.read()
-        self.request_token = oauth.OAuthToken.from_string(out) 
+        self.request_token = oauth.Token.from_string(out) 
         return self.request_token
 
     def get_access_token(self, verifier=None):
@@ -69,7 +69,7 @@ class TumblrAuthenticator(oauth.OAuthClient):
             url = self.access_token_url
 
             # build request
-            request = oauth.OAuthRequest.from_consumer_and_token(
+            request = oauth.Request.from_consumer_and_token(
                 self.consumer,
                 token=self.request_token, http_url=url,
                 verifier=str(verifier)
@@ -87,7 +87,7 @@ class TumblrAuthenticator(oauth.OAuthClient):
         if self.access_token is None:
             raise TumblrError('authenticator does not have a an access token, call get_authorization_url, have the user hit the URL, then call get_access_token, then you can make oauth requests')
         try:
-            oauth_request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, token=self.access_token, http_method=method, http_url=url, parameters=parameters)
+            oauth_request = oauth.Request.from_consumer_and_token(self.consumer, token=self.access_token, http_method=method, http_url=url, parameters=parameters)
             oauth_request.sign_request(self.signature_method, self.consumer, self.access_token)
             req_headers = oauth_request.to_header()
             print req_headers
