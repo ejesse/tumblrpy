@@ -135,6 +135,9 @@ class Post(TumblrObject):
         
     def __string__(self):
         return '%s post with id %s at ' % (self.type,self.id,self.url)
+    
+    def delete(self):
+        pass
 
 class TextPost(Post):
     
@@ -151,6 +154,11 @@ class TextPost(Post):
         
     def __string__(self):
         return self.title
+    
+    def save(self):
+        if not self.api:
+            raise TumblrError("Can't save. %s Object was instantiated without an API instance." % (self.__class__.__name__))
+        self.api.update_edit_post(self)
 
 class PhotoPost(Post):
     

@@ -1,5 +1,6 @@
 import logging
 import datetime
+import time
 log = logging.getLogger('tumblr')
 
 def dict_to_object_value(field_name,obj,dict_object,type='string',object_field_name=None,dict_field_name=None,importance=logging.WARN):
@@ -26,7 +27,21 @@ def dict_to_object_value(field_name,obj,dict_object,type='string',object_field_n
     else:
         log.warn('field ' + dict_field_name + ' not found')
         
-    
+def remove_nones(dict):
+    new_dict = {}
+    for key in dict.keys():
+        if dict[key] is not None:
+            if dict[key] is not '':
+                log.debug('Preserving key %s with value %s' % (key,dict[key]))
+                value = dict[key]
+                if isinstance(value,datetime.datetime):
+                    value = int(time.mktime(dict[key].timetuple()))
+                new_dict[key] = value
+            else:
+                log.debug("Removing key %s with value ''" % (key))
+        else:
+            log.debug("Removing key %s with value None" % (key))
+    return new_dict
 
 def to_unicode_or_bust(
     obj, encoding='utf-8'):

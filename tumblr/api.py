@@ -2,7 +2,7 @@ import simplejson
 import urllib
 import urllib2
 from tumblr.errors import TumblrError
-from tumblr.utils import to_unicode_or_bust
+from tumblr.utils import to_unicode_or_bust, remove_nones
 from tumblr.objects import *
 from tumblr.authentication import TumblrAuthenticator
 import logging
@@ -14,8 +14,9 @@ class TumblrAPI():
     authenticator = None
     api_base = 'http://api.tumblr.com/v2'
     print_json = False
+    blog_base_hostname = None
     
-    def __init__(self,oauth_consumer_key=None,secret_key=None,authenticator=None,print_json=False):
+    def __init__(self,oauth_consumer_key=None,secret_key=None,authenticator=None,print_json=False,blog_base_hostname=None):
         if self.print_json or log.level < 20:
             self.print_json = print_json
         if authenticator is not None:
@@ -25,6 +26,10 @@ class TumblrAPI():
         if oauth_consumer_key is not None and secret_key is not None and authenticator is None:
             log.info('Instantiating TumblrAuthenticator from supplied key and secret')
             self.authenticator = TumblrAuthenticator(oauth_consumer_key,secret_key)
+        if blog_base_hostname is None:
+            log.warn('Not providing a base_hostname will make it near impossible to do any writes to tumblr')
+        else:
+            self.blog_base_hostname = blog_base_hostname
 
     def __check_for_tumblr_error__(self,json):
         error_text = 'Unknown Tumblr error'
@@ -37,6 +42,7 @@ class TumblrAPI():
                     raise TumblrError('An error was returned from Tumblr API: %s' % (error_text))    
 
     def __get_request_unauthenticated__(self,endpoint,data):
+        data = remove_nones(data)
         params = urllib.urlencode(data)
         full_uri = "%s?%s" % (endpoint,params)
         try:
@@ -55,7 +61,8 @@ class TumblrAPI():
             data['api_key'] = self.authenticator.oauth_consumer_key
         except:
             raise TumblrError('This method requires instantiating the TumblrAPI with an oauth_consumer_key and secret_key or a TumblrAuthenticator')
-        if method.lower() is 'get':
+        data = remove_nones(data)
+        if method.lower() == 'get':
             params = urllib.urlencode(data)
             full_uri = "%s?%s" % (endpoint,params)
             log.debug('%s %s' % ('making request to',full_uri))
@@ -81,23 +88,25 @@ class TumblrAPI():
     def __get_request_key_authenticated__(self,endpoint,data):
         return self.__make_authenticated_request__(self,endpoint,data,'GET')
     
-    def __make_oauth_request(self,endpoint,data,method):
+    def __make_oauth_request__(self,endpoint,data,method):
         try:
             access_token = self.authenticator.access_token
         except:
             raise TumblrError('This method requires obtaining and access token')
         #params = urllib.urlencode(data)
+        data = remove_nones(data)
         log.debug('making %s request to %s with parameters %s' % (method,endpoint,data))
         try:
             response_text = self.authenticator.make_oauth_request(endpoint, method, parameters=data)
+            log.debug('raw response: %s' % (response_text))
+            response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
+            if self.print_json:
+                print response_text
+            self.__check_for_tumblr_error__(response_text)
+            
+            return response_text
         except TumblrError, e:
             log.error('Error mamking OAuth request: %s' % (e))
-        
-        response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
-        if self.print_json:
-            print response_text
-        self.__check_for_tumblr_error__(response_text)
-        return response_text
     
     def __get_request_oauth_authenticated__(self,endpoint,data):
         return self.__make_oauth_request(endpoint, data, 'GET')
@@ -211,4 +220,39 @@ class TumblrAPI():
         return posts
     
     def update_edit_post(self,post):
+        
+        if self.blog_base_hostname is None:
+            raise TumblrError("Set a blog_base_hostname on your API instance so we know which blog we're trying to talk to. No, you cannot at this time get this info from an OAuth Key")
+        
+        parameters = {}
+        
+        parameters['type'] = post.type
+        parameters['tags'] = post.tags
+        parameters['tweet'] = False
+        if post.date is None:
+            parameters['date'] = datetime.datetime.now()
+        parameters['markdown']=False
+        
+        log.debug('Post type is %s' % (post.type))
+        
+        if post.type.lower() == 'text':
+            parameters['title'] = post.title
+            parameters['body'] = post.body
+        
+        endpoint = "%s/blog/%s/post" % (self.api_base,self.blog_base_hostname)
+        
+        if post.id is not None:
+            endpoint = endpoint + '/edit'
+        
+        r = self.__make_oauth_request__(endpoint, parameters, 'POST')
+            
+        return r
+    
+    def delete_post(self,post=None,id=None):
+        if post is None and id is None:
+            raise TumblrError("Pass in a post or id, otherwise what are you deleting?")
+        elif post is not None:
+            if post.id is None:
+                raise TumblrError("The supplied Post object has no id")
+        
         

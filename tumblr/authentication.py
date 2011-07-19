@@ -57,7 +57,8 @@ class TumblrAuthenticator(oauth.OAuthClient):
         request.sign_request(self.signature_method, self.consumer, None)
         resp = urlopen(Request(url, headers=request.to_header()))
         out = resp.read()
-        return oauth.OAuthToken.from_string(out)
+        self.request_token = oauth.OAuthToken.from_string(out) 
+        return self.request_token
 
     def get_access_token(self, verifier=None):
         """
@@ -88,7 +89,10 @@ class TumblrAuthenticator(oauth.OAuthClient):
         try:
             oauth_request = oauth.OAuthRequest.from_consumer_and_token(self.consumer, token=self.access_token, http_method=method, http_url=url, parameters=parameters)
             oauth_request.sign_request(self.signature_method, self.consumer, self.access_token)
-            resp = urlopen(Request(url, headers=oauth_request.to_header()))
+            req_headers = oauth_request.to_header()
+            print req_headers
+#            log.debug("making oauth request %s to URL % with parameters: %s and headers: %s" % (method,url,parameters,req_headers))
+            resp = urlopen(Request(url, headers=req_headers))
             return resp.read()
         except Exception, e:
             raise TumblrError('Failed to send request: %s' % e)
