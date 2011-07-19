@@ -12,11 +12,6 @@ AUTHORIZE_URL = 'http://www.tumblr.com/oauth/authorize'
 ACCESS_TOKEN_URL = 'http://www.tumblr.com/oauth/access_token'
 BASE_SERVER = 'www.tumblr.com:80'
 
-#REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
-#AUTHORIZE_URL = 'https://api.twitter.com/oauth/authorize'
-#ACCESS_TOKEN_URL = 'https://api.twitter.com/oauth/access_token'
-#BASE_SERVER = 'https://api.twitter.com:443'
-
 
 class TumblrAuthenticator(oauth.Client):
 
