@@ -86,6 +86,8 @@ class TumblrAuthenticator(oauth.Client):
             oauth_request.sign_request(self.signature_method, self.consumer, self.access_token)
             req_headers = oauth_request.to_header()
             print req_headers
+            for k in req_headers.keys():
+                headers[k] = req_headers[k]
 #            log.debug("making oauth request %s to URL % with parameters: %s and headers: %s" % (method,url,parameters,req_headers))
             resp = urlopen(Request(url, headers=req_headers))
             return resp.read()

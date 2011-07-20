@@ -20,9 +20,30 @@ class TumblrObject(object):
         return '%s %s' % (self.__class__.__name__,self.__string__())
 
 class TumblrUser(TumblrObject):
-    pass
+    name=None
+    likes = 0
+    following=0
+    default_post_format='html'
+    blogs=[]
+
+    def __init__(self,api=None,data_dict=None):
+        if data_dict is not None:
+            log.debug('attempting to populate data for %s' % (self.__class__.__name__))
+            dict_to_object_value('name',self,data_dict)
+            dict_to_object_value('likes',self,data_dict)
+            dict_to_object_value('following',self,data_dict)
+            dict_to_object_value('default_post_format',self,data_dict)
+            if data_dict.has_key('blogs'):
+                for blog_dict in data_dict['blogs']:
+                    blog = Blog(api=api,data_dict=blog_dict)
+                    self.blogs.append(blog)
+            super(TumblrUser,self).__init__(api=api)
+
+    def __string__(self):
+        return "%s" % (self.name)
 
 class Blog(TumblrObject):
+    url=None
     title = None
     num_posts = None
     name = None
@@ -44,6 +65,7 @@ class Blog(TumblrObject):
             dict_to_object_value('ask',self,data_dict)
             dict_to_object_value('ask_anon',self,data_dict)
             dict_to_object_value('likes',self,data_dict)
+            dict_to_object_value('url',self,data_dict)
 
         super(Blog,self).__init__(api=api)
             

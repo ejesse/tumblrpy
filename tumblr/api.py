@@ -15,8 +15,9 @@ class TumblrAPI():
     api_base = 'http://api.tumblr.com/v2'
     print_json = False
     blog_base_hostname = None
+    authorized_user=None
     
-    def __init__(self,oauth_consumer_key=None,secret_key=None,authenticator=None,print_json=False,blog_base_hostname=None):
+    def __init__(self,oauth_consumer_key=None,secret_key=None,authenticator=None,print_json=False,access_token=None,blog_base_hostname=None):
         if self.print_json or log.level < 20:
             self.print_json = print_json
         if authenticator is not None:
@@ -26,10 +27,19 @@ class TumblrAPI():
         if oauth_consumer_key is not None and secret_key is not None and authenticator is None:
             log.info('Instantiating TumblrAuthenticator from supplied key and secret')
             self.authenticator = TumblrAuthenticator(oauth_consumer_key,secret_key)
-        if blog_base_hostname is None:
-            log.warn('Not providing a base_hostname will make it near impossible to do any writes to tumblr')
-        else:
+        if access_token is not None:
+            if self.authenticator is None:
+                self.authenticator = TumblrAuthenticator()
+            self.authenticator.access_token = access_token
+            self.authorized_user = self.get_user_info()
+            if len(self.authorized_user.blogs) == 1:
+                self.blog_base_hostname = self.authorized_user.blogs[0].url
+        if blog_base_hostname is not None:
             self.blog_base_hostname = blog_base_hostname
+        if self.blog_base_hostname is None:
+            log.warn('Not providing a base_hostname will make it near impossible to do any writes to tumblr, authorize a user')
+        
+            
 
     def __check_for_tumblr_error__(self,json):
         error_text = 'Unknown Tumblr error'
@@ -109,7 +119,7 @@ class TumblrAPI():
             log.error('Error mamking OAuth request: %s' % (e))
     
     def __get_request_oauth_authenticated__(self,endpoint,data):
-        return self.__make_oauth_request(endpoint, data, 'GET')
+        return self.__make_oauth_request__(endpoint, data, 'GET')
     
     def __post_request_unauthenticated__(self,endpoint,data):
         pass
@@ -124,6 +134,11 @@ class TumblrAPI():
         """ convenience method """
         if verifier is None:
             raise TumblrError("Can't get an access token without a verifier")
+        ## go get the user info, makes other things easier later
+        self.authorized_user = self.get_user_info()
+        if self.blog_base_hostname is None:
+            if len(self.authorized_user.blogs) == 1:
+                self.blog_base_hostname = self.authorized_user.blogs[0].url
         return self.authenticator.get_access_token(verifier=verifier)
     
     def get_user_info(self):
@@ -132,10 +147,16 @@ class TumblrAPI():
         
         endpoint = self.api_base + '/user/info'
         
-        r = self.__get_request_oauth_authenticated__(endpoint, {})
+        returned_json = self.__get_request_oauth_authenticated__(endpoint, {})
+        data_dict = simplejson.loads(returned_json)
+        
+        user_dict = data_dict['response']['user']
+        user = TumblrUser(api=self,data_dict=user_dict)
+        
+        return user
     
-    def get_blog_info(self,blog_name):
-        if (blog_name is None):
+    def get_blog_info(self,blog_name=None):
+        if (blog_name is None and self.blog_base_hostname is None):
             raise TumblrError("please pass in a blog name (e.g. ejesse.tumblr.com)")
         
         parameters = {}
@@ -149,11 +170,11 @@ class TumblrAPI():
         blog = Blog(api=self,data_dict=blog_dict)
         return blog
     
-    def get_blog(self,blog_name):
+    def get_blog(self,blog_name=None):
         return self.get_blog_info(blog_name)
     
-    def get_posts(self,blog_name, type=None,id=None,tag=None,limit=None,offset=None,reblog_info=None,notes_info=None,format=None):
-        if (blog_name is None):
+    def get_posts(self,blog_name=None, type=None,id=None,tag=None,limit=None,offset=None,reblog_info=None,notes_info=None,format=None):
+        if (blog_name is None and self.blog_base_hostname is None):
             raise TumblrError("please pass in a blog name (e.g. ejesse.tumblr.com)")
         
         parameters = {}
