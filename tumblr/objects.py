@@ -309,13 +309,14 @@ class VideoPost(Post):
     type='video'
     caption=None
     body=None
+    player=None
     
     def __init__(self,api=None,data_dict=None):
-        raise TumblrError("sorry, video post objects aren't done yet")
         if data_dict is not None:
             log.debug('attempting to populate data for %s' % (self.__class__.__name__))
             dict_to_object_value('caption',self,data_dict)
             dict_to_object_value('body',self,data_dict)
+            self.player = data_dict['player']
         super(VideoPost,self).__init__(api=api,data_dict=data_dict)
         
     def __string__(self):
@@ -323,16 +324,19 @@ class VideoPost(Post):
     
 class AnswerPost(Post):
 
-    title=None
-    body=None
+    asking_name=None
+    asking_url=None
+    question=None
+    answer=None
     
     def __init__(self,api=None,data_dict=None):
-        raise TumblrError("sorry, answer post objects aren't done yet")
         if data_dict is not None:
             log.debug('attempting to populate data for TextPost')
-            dict_to_object_value('title',self,data_dict)
-            dict_to_object_value('body',self,data_dict)
-        super(TextPost,self).__init__(api=api,data_dict=data_dict)
+            dict_to_object_value('asking_name',self,data_dict)
+            dict_to_object_value('asking_url',self,data_dict)
+            dict_to_object_value('question',self,data_dict)
+            dict_to_object_value('answer',self,data_dict)
+        super(AnswerPost,self).__init__(api=api,data_dict=data_dict)
         
     def __string__(self):
         return self.title
@@ -343,8 +347,14 @@ class Avatar(TumblrObject):
         raise TumblrError("sorry, avatar objects aren't done yet")
 
 
-class Follower(TumblrObject):
+class Follower(TumblrUser):
+    
+    url = None
     
     def __init__(self,api=None,data_dict=None):
-        raise TumblrError("sorry, follower objects aren't done yet")
+        if data_dict is not None:
+            log.debug('attempting to populate data for Follower')
+            dict_to_object_value('url',self,data_dict)
+        super(Follower,self).__init__(api=api,data_dict=data_dict)
+        
 

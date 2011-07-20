@@ -158,13 +158,19 @@ class TumblrAPI():
     def get_blog_info(self,blog_name=None):
         if (blog_name is None and self.blog_base_hostname is None):
             raise TumblrError("please pass in a blog name (e.g. ejesse.tumblr.com)")
-        
+        if blog_name is None:
+            blog_name = self.blog_base_hostname
+            
+        blog_name = blog_name.replace('http://','')
+        blog_name = blog_name.replace('/','')
         parameters = {}
         
         endpoint = self.api_base + '/blog/' + blog_name + '/info'
         
-        returned_json = self.__get_request_key_authenticated__(endpoint, parameters)
+        returned_json = self.__make_authenticated_request__(endpoint, parameters,'GET')
         data_dict = simplejson.loads(returned_json)
+        
+        log.debug('Returned JSON: %s' % (returned_json))
         
         blog_dict = data_dict['response']['blog']
         blog = Blog(api=self,data_dict=blog_dict)
@@ -289,5 +295,64 @@ class TumblrAPI():
         elif post is not None:
             if post.id is None:
                 raise TumblrError("The supplied Post object has no id")
+    
+    def get_followers(self,blog_name=None,limit=None,offset=None):
+        if (blog_name is None and self.blog_base_hostname is None):
+            raise TumblrError("please pass in a blog name (e.g. ejesse.tumblr.com)")
+        if blog_name is None:
+            blog_name = self.blog_base_hostname
+            
+        blog_name = blog_name.replace('http://','')
+        blog_name = blog_name.replace('/','')
+        
+        parameters = {}
+        
+        if limit is not None:
+            parameters['limit'] = limit
+        if offset is not None:
+            parameters['offset'] = offset
+        
+        endpoint = self.api_base + '/blog/' + blog_name + '/followers'
+        
+        returned_json = self.__make_oauth_request__(endpoint, parameters,'GET')
+        data_dict = simplejson.loads(returned_json)
+        
+        log.debug('Returned JSON: %s' % (returned_json))
+        
+        followers_dict = data_dict['response']['users']
+        followers = []
+        for f_dict in followers_dict:
+            follower = Follower(api=self,data_dict=f_dict)
+            followers.append(follower)
+        return followers
         
         
+        
+    def follow(self,blog_url):
+        
+        blog_url = blog_url.replace('http://','')
+        blog_url = blog_url.replace('/','')
+        
+        parameters = {'url' : blog_url}
+        
+        endpoint = self.api_base + '/user/follow'
+        try:
+            returned_json = self.__make_oauth_request__(endpoint, parameters,'POST')
+            log.debug('following %s result: %s' % (blog_url,returned_json))
+        except TumblrError:
+            return False
+        return True
+    
+    def unfollow(self,blog_url):
+        
+        blog_url = blog_url.replace('http://','')
+        
+        parameters = {'url' : blog_url}
+        
+        endpoint = self.api_base + '/user/unfollow'
+        try:
+            returned_json = self.__make_oauth_request__(endpoint, parameters,'POST')
+            log.debug('unfollowing %s result: %s' % (blog_url,returned_json))
+        except TumblrError:
+            return False
+        return True
