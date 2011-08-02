@@ -236,7 +236,7 @@ class QuotePost(Post):
         super(QuotePost,self).__init__(api=api,data_dict=data_dict)
         
     def __string__(self):
-        return self.title
+        return self.text
 
 class LinkPost(Post):
     

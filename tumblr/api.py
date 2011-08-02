@@ -96,7 +96,7 @@ class TumblrAPI():
         return response_text
     
     def __get_request_key_authenticated__(self,endpoint,data):
-        return self.__make_authenticated_request__(self,endpoint,data,'GET')
+        return self.__make_authenticated_request__(endpoint,data,'GET')
     
     def __make_oauth_request__(self,endpoint,data,method):
         try:
@@ -125,7 +125,7 @@ class TumblrAPI():
         pass
     
     def __post_request_key_authenticated__(self,endpoint,data):
-        return self.__make_authenticated_request__(self,endpoint,data,'GET')
+        return self.__make_authenticated_request__(endpoint,data,'GET')
     
     def __post_request_oauth_authenticated__(self,endpoint,data):
         return self.__make_oauth_request(endpoint, data, 'POST')
@@ -280,10 +280,12 @@ class TumblrAPI():
             parameters['title'] = post.title
             parameters['body'] = post.body
         
-        endpoint = "%s/blog/%s/post" % (self.api_base,self.blog_base_hostname)
+        blog_base_hostname = self.blog_base_hostname.replace("http://","")
+        
+        endpoint = "%s/blog/%spost" % (self.api_base,blog_base_hostname)
         
         if post.id is not None:
-            endpoint = endpoint + '/edit'
+            endpoint = endpoint + 'edit'
         
         r = self.__make_oauth_request__(endpoint, parameters, 'POST')
             
