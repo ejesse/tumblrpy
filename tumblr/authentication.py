@@ -67,7 +67,7 @@ class TumblrAuthenticator(oauth.Client):
             request = oauth.Request.from_consumer_and_token(
                 self.consumer,
                 token=self.request_token, http_url=url,
-                verifier=str(verifier)
+                parameters={'verifier':str(verifier)}
             )
             request.sign_request(self.signature_method, self.consumer, self.request_token)
 
@@ -76,7 +76,7 @@ class TumblrAuthenticator(oauth.Client):
             self.access_token = oauth.OAuthToken.from_string(resp.read())
             return self.access_token
         except Exception, e:
-            raise TumblrError(e)
+            log.error("Failed to access token: %s" % (e))
         
     def make_oauth_request(self, url, method, parameters={}, headers={}):
         if self.access_token is None:

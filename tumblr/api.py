@@ -130,16 +130,20 @@ class TumblrAPI():
     def __post_request_oauth_authenticated__(self,endpoint,data):
         return self.__make_oauth_request(endpoint, data, 'POST')
     
+    def get_authorization_url(self):
+        return self.authenticator.get_authorization_url()
+    
     def get_access_token(self,verifier=None):
         """ convenience method """
         if verifier is None:
             raise TumblrError("Can't get an access token without a verifier")
+        access_token = self.authenticator.get_access_token(verifier=verifier)
         ## go get the user info, makes other things easier later
         self.authorized_user = self.get_user_info()
         if self.blog_base_hostname is None:
             if len(self.authorized_user.blogs) == 1:
                 self.blog_base_hostname = self.authorized_user.blogs[0].url
-        return self.authenticator.get_access_token(verifier=verifier)
+        return access_token
     
     def get_user_info(self):
         if self.authenticator.access_token is None:
