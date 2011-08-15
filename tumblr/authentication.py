@@ -1,6 +1,7 @@
-import httplib
+import httplib,urllib
 import time
 import oauth2 as oauth
+from oauth2 import to_unicode,to_utf8,to_unicode_if_string,to_utf8_if_string,to_utf8_optional_iterator
 from urllib2 import Request, urlopen
 from tumblr.errors import TumblrError
 import logging
@@ -10,8 +11,18 @@ log = logging.getLogger('tumblr')
 REQUEST_TOKEN_URL = 'http://www.tumblr.com/oauth/request_token'
 AUTHORIZE_URL = 'http://www.tumblr.com/oauth/authorize'
 ACCESS_TOKEN_URL = 'http://www.tumblr.com/oauth/access_token'
-BASE_SERVER = 'www.tumblr.com:80'
+BASE_SERVER = 'api.tumblr.com:80'
 
+def to_postdata(params):
+    """Serialize as post data for a POST request."""
+    d = {}
+    for k, v in params.iteritems():
+        d[k.encode('utf-8')] = to_utf8_optional_iterator(v)
+
+    # tell urlencode to deal with sequence values and map them correctly
+    # to resulting querystring. for example self["k"] = ["v1", "v2"] will
+    # result in 'k=v1&k=v2' and not k=%5B%27v1%27%2C+%27v2%27%5D
+    return urllib.urlencode(d, True).replace('+', '%20')
 
 class TumblrAuthenticator(oauth.Client):
 
@@ -25,7 +36,8 @@ class TumblrAuthenticator(oauth.Client):
     access_token = None
     consumer = None
     signature_method = oauth.SignatureMethod_HMAC_SHA1()
-
+    
+    
     def __init__(self,oauth_consumer_key,secret_key,access_token=None):
         self.oauth_consumer_key=oauth_consumer_key
         self.secret_key=secret_key
@@ -64,34 +76,68 @@ class TumblrAuthenticator(oauth.Client):
             url = self.access_token_url
 
             # build request
+            self.request_token.verifier=str(verifier)
             request = oauth.Request.from_consumer_and_token(
                 self.consumer,
-                token=self.request_token, http_url=url,
-                parameters={'verifier':str(verifier)}
+                token=self.request_token, http_url=url
             )
             request.sign_request(self.signature_method, self.consumer, self.request_token)
 
             # send request
-            resp = urlopen(Request(url, headers=request.to_header()))
-            self.access_token = oauth.OAuthToken.from_string(resp.read())
+            headers=request.to_header()
+            headers['Accept'] = "text/plain"
+            log.debug("OAuth headers: %s" % (headers))
+            
+            resp = urlopen(Request(url, headers=headers))
+            response_text = resp.read()
+            log.debug("access token attempt returned: %" % (response_text))
+            self.access_token = oauth.Token.from_string(response_text)
             return self.access_token
         except Exception, e:
-            log.error("Failed to access token: %s" % (e))
+            log.error("Failed to get access token: %s" % (e))
         
     def make_oauth_request(self, url, method, parameters={}, headers={}):
+        
         if self.access_token is None:
             raise TumblrError('authenticator does not have a an access token, call get_authorization_url, have the user hit the URL, then call get_access_token, then you can make oauth requests')
         try:
+            log.debug("Making OAuth %s to %s with parameters %s" % (method,url,parameters))
             oauth_request = oauth.Request.from_consumer_and_token(self.consumer, token=self.access_token, http_method=method, http_url=url, parameters=parameters)
             oauth_request.sign_request(self.signature_method, self.consumer, self.access_token)
-            req_headers = oauth_request.to_header()
-            print req_headers
-            for k in req_headers.keys():
-                headers[k] = req_headers[k]
-#            log.debug("making oauth request %s to URL % with parameters: %s and headers: %s" % (method,url,parameters,req_headers))
-            resp = urlopen(Request(url, headers=req_headers))
+            oauth_headers = oauth_request.to_header()
+            headers.update(oauth_headers)
+            headers['Accept'] = "text/plain"
+            if method.lower() == 'post':
+                headers['Content-Type'] = 'application/x-www-form-urlencoded'
+            
+            print headers
+            
+            resp = urlopen(Request(url, headers=headers))
             return resp.read()
         except Exception, e:
-            raise TumblrError('Failed to send request: %s' % e)
+            log.error('Failed to send request: %s' % e)
+        
+    def make_oauth_post(self,url,parameters={},headers={}):
+        if self.access_token is None:
+            raise TumblrError('authenticator does not have a an access token, call get_authorization_url, have the user hit the URL, then call get_access_token, then you can make oauth requests')
+        try:
+            oauth_request = oauth.Request.from_consumer_and_token(self.consumer, token=self.access_token, http_method='POST', http_url=url, parameters=parameters)
+            oauth_request.sign_request(self.signature_method, self.consumer, self.access_token)
+            oauth_headers = oauth_request.to_header()
+            headers.update(oauth_headers)
+            headers['Accept'] = "text/json"
+            headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=utf-8'
+            headers['Expect'] = '100-continue'
+            
+            self.connection.set_debuglevel(1)
+            self.connection.request('POST', url, body=to_postdata(parameters), headers=headers)
+            response = self.connection.getresponse()
+            return response.read()
+        except Exception, e:
+            log.error('Failed to send request: %s' % e)
+        
+        
+        
+        
 
         
