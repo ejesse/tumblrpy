@@ -26,19 +26,19 @@ def to_postdata(params):
 
 class TumblrAuthenticator(oauth.Client):
 
-    oauth_consumer_key=None
-    secret_key=None
     request_token_url = REQUEST_TOKEN_URL
     authorization_url_base = AUTHORIZE_URL
-    authorize_url = None
     access_token_url = ACCESS_TOKEN_URL
-    request_token = None
-    access_token = None
-    consumer = None
     signature_method = oauth.SignatureMethod_HMAC_SHA1()
     
     
     def __init__(self,oauth_consumer_key,secret_key,access_token=None):
+        self.oauth_consumer_key=None
+        self.secret_key=None
+        self.authorize_url = None
+        self.request_token = None
+        self.access_token = None
+        self.consumer = None
         self.oauth_consumer_key=oauth_consumer_key
         self.secret_key=secret_key
         self.consumer = oauth.Consumer(self.oauth_consumer_key, self.secret_key)

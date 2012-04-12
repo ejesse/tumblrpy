@@ -11,13 +11,13 @@ log = logging.getLogger('tumblr')
 
 class TumblrAPI():
     
-    authenticator = None
     api_base = 'http://api.tumblr.com/v2'
-    print_json = False
-    blog_base_hostname = None
-    authorized_user=None
     
     def __init__(self,oauth_consumer_key=None,secret_key=None,authenticator=None,print_json=False,access_token=None,blog_base_hostname=None):
+        self.authenticator = None
+        print_json = False
+        self.blog_base_hostname = None
+        self.authorized_user=None
         if self.print_json or log.level < 20:
             self.print_json = print_json
         if authenticator is not None:
