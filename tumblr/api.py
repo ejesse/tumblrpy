@@ -1,6 +1,7 @@
 import simplejson
 import urllib
 import urllib2
+
 from tumblr.errors import TumblrError
 from tumblr.utils import to_unicode_or_bust, remove_nones
 from tumblr.objects import *
@@ -43,6 +44,9 @@ class TumblrAPI():
 
     def __check_for_tumblr_error__(self,json):
         error_text = 'Unknown Tumblr error'
+        if json is None:
+            raise TumblrError('An error was returned from Tumblr API: %s' % (error_text))  
+        
         result = simplejson.loads(json)
         if result.has_key('meta'):
             if result['meta'].has_key('status'):
@@ -72,6 +76,7 @@ class TumblrAPI():
         except:
             raise TumblrError('This method requires instantiating the TumblrAPI with an oauth_consumer_key and secret_key or a TumblrAuthenticator')
         data = remove_nones(data)
+        
         if method.lower() == 'get':
             params = urllib.urlencode(data)
             full_uri = "%s?%s" % (endpoint,params)
@@ -86,6 +91,7 @@ class TumblrAPI():
                 log.info('making request via %s' % (method))
                 request.get_method = lambda: method
             log.debug('making %s request to %s with parameters %s' % (method,endpoint,data))
+
             response = urllib2.urlopen(request)
             
         response_text = response.read()
@@ -106,17 +112,16 @@ class TumblrAPI():
         #params = urllib.urlencode(data)
         data = remove_nones(data)
         log.debug('making %s request to %s with parameters %s' % (method,endpoint,data))
-        try:
-            response_text = self.authenticator.make_oauth_request(endpoint, method, parameters=data)
-            log.debug('raw response: %s' % (response_text))
-            response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
-            if self.print_json:
-                print response_text
-            self.__check_for_tumblr_error__(response_text)
-            
-            return response_text
-        except TumblrError, e:
-            log.error('Error mamking OAuth request: %s' % (e))
+        
+        response_text = self.authenticator.make_oauth_request(endpoint, method, parameters=data)
+
+        log.debug('raw response: %s' % (response_text))
+        response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
+        if self.print_json:
+            print response_text
+        self.__check_for_tumblr_error__(response_text)
+        
+        return response_text
     
     def __get_request_oauth_authenticated__(self,endpoint,data):
         return self.__make_oauth_request__(endpoint, data, 'GET')
@@ -142,7 +147,7 @@ class TumblrAPI():
         self.authorized_user = self.get_user_info()
         if self.blog_base_hostname is None:
             if len(self.authorized_user.blogs) == 1:
-                self.blog_base_hostname = self.authorized_user.blogs[0].url
+                self.blog_base_hostname = self.authorized_user.blogs[0].url 
         return access_token
     
     def get_user_info(self):
@@ -158,7 +163,19 @@ class TumblrAPI():
         user = TumblrUser(api=self,data_dict=user_dict)
         
         return user
-    
+
+
+    def get_user_dashboard(self, **kwargs):
+        endpoint = self.api_base + '/user/dashboard'
+        parameters = {}
+        for arg in kwargs:
+            parameters[arg] = kwargs[arg]
+
+        returned_json = self.__get_request_oauth_authenticated__(endpoint, parameters)
+        data_dict = simplejson.loads(returned_json)
+        return data_dict
+
+
     def get_blog_info(self,blog_name=None):
         if (blog_name is None and self.blog_base_hostname is None):
             raise TumblrError("please pass in a blog name (e.g. ejesse.tumblr.com)")
