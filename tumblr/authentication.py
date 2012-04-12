@@ -73,25 +73,14 @@ class TumblrAuthenticator(oauth.Client):
         with user supplied verifier.
         """
         try:
-            url = self.access_token_url
-
             # build request
-            self.request_token.verifier=str(verifier)
-            request = oauth.Request.from_consumer_and_token(
-                self.consumer,
-                token=self.request_token, http_url=url
-            )
-            request.sign_request(self.signature_method, self.consumer, self.request_token)
-
-            # send request
-            headers=request.to_header()
-            headers['Accept'] = "text/plain"
-            log.debug("OAuth headers: %s" % (headers))
+            self.request_token.set_verifier(verifier)
+            client = oauth.Client(self.consumer, self.request_token)
             
-            resp = urlopen(Request(url, headers=headers))
-            response_text = resp.read()
-            log.debug("access token attempt returned: %" % (response_text))
-            self.access_token = oauth.Token.from_string(response_text)
+            resp, content = client.request(self.access_token_url, "POST")
+            
+            log.debug("access token attempt returned: %s" % (resp))
+            self.access_token = oauth.Token.from_string(content)
             return self.access_token
         except Exception, e:
             log.error("Failed to get access token: %s" % (e))
