@@ -98,9 +98,12 @@ class TumblrAuthenticator(oauth.Client):
             headers['Accept'] = "text/plain"
             if method.lower() == 'post':
                 headers['Content-Type'] = 'application/x-www-form-urlencoded'
-            
+            else:
+                params = urllib.urlencode(parameters)
+                url = "%s?%s" % (url,params)
+
             print headers
-            
+            print url
             resp = urlopen(Request(url, headers=headers))
             return resp.read()
         except Exception, e:
