@@ -32,7 +32,7 @@ class TumblrAuthenticator(oauth.Client):
     signature_method = oauth.SignatureMethod_HMAC_SHA1()
     
     
-    def __init__(self,oauth_consumer_key,secret_key,access_token=None):
+    def __init__(self,oauth_consumer_key,secret_key,access_token=None,request_token=None):
         self.oauth_consumer_key=None
         self.secret_key=None
         self.authorize_url = None
@@ -46,9 +46,12 @@ class TumblrAuthenticator(oauth.Client):
         if access_token is not None:
             self.access_token = access_token
         else:
-            """ just go get the request token and auth URL so the dev doesn't have so many steps """
-            self.request_token = self.get_request_token()
-            self.authorize_url = self.get_authorization_url()
+            if self.request_token is None:
+                """ just go get the request token and auth URL so the dev doesn't have so many steps """
+                self.request_token = self.get_request_token()
+                self.authorize_url = self.get_authorization_url()
+            else:
+                self.request_token = request_token
 
     def get_authorization_url(self):
         request = oauth.Request.from_token_and_callback(token=self.request_token, http_url=self.authorization_url_base)

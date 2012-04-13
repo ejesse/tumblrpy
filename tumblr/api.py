@@ -14,7 +14,7 @@ class TumblrAPI():
     
     api_base = 'http://api.tumblr.com/v2'
     
-    def __init__(self,oauth_consumer_key=None,secret_key=None,authenticator=None,print_json=False,access_token=None,blog_base_hostname=None):
+    def __init__(self,oauth_consumer_key=None,secret_key=None,authenticator=None,print_json=False,access_token=None,blog_base_hostname=None, request_token=None):
         self.authenticator = None
         self.print_json = False
         self.blog_base_hostname = None
@@ -35,6 +35,12 @@ class TumblrAPI():
             self.authorized_user = self.get_user_info()
             if len(self.authorized_user.blogs) == 1:
                 self.blog_base_hostname = self.authorized_user.blogs[0].url
+
+        if request_token is not None:
+            if self.authenticator is None:
+                self.authenticator = TumblrAuthenticator()
+            self.authenticator.request_token = request_token
+
         if blog_base_hostname is not None:
             self.blog_base_hostname = blog_base_hostname
         if self.blog_base_hostname is None:
