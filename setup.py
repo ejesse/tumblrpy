@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name="tumblrpy",
-      version="0.1",
+      version="0.1.1",
       description="Tumblr library for python",
       license="MIT",
       author="Jesse Emery",
