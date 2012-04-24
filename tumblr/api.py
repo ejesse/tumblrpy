@@ -71,8 +71,8 @@ class TumblrAPI():
             raise TumblrError(e.__str__())
         response_text = response.read()
         response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
-        if self.print_json or log.level < 20:
-            print response_text
+        #if self.print_json or log.level < 20:
+        #    print response_text
         self.__check_for_tumblr_error__(response_text)
         return response_text
     
@@ -102,8 +102,8 @@ class TumblrAPI():
             
         response_text = response.read()
         response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
-        if self.print_json:
-            print response_text
+        #if self.print_json:
+        #    print response_text
         self.__check_for_tumblr_error__(response_text)
         return response_text
     
@@ -123,8 +123,8 @@ class TumblrAPI():
 
         log.debug('raw response: %s' % (response_text))
         response_text = to_unicode_or_bust(response_text, 'iso-8859-1')
-        if self.print_json:
-            print response_text
+        #if self.print_json:
+        #    print response_text
         self.__check_for_tumblr_error__(response_text)
         
         return response_text

@@ -105,8 +105,6 @@ class TumblrAuthenticator(oauth.Client):
                 params = urllib.urlencode(parameters)
                 url = "%s?%s" % (url,params)
 
-            print headers
-            print url
             resp = urlopen(Request(url, headers=headers))
             return resp.read()
         except Exception, e:
