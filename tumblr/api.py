@@ -1,7 +1,7 @@
 import simplejson
 import urllib
 import urllib2
-from simplejson.decoders import JSONDecodeError
+from simplejson.decoder import JSONDecodeError
 
 from tumblr.errors import TumblrError
 from tumblr.utils import to_unicode_or_bust, remove_nones
