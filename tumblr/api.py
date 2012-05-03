@@ -1,7 +1,6 @@
 import simplejson
 import urllib
 import urllib2
-from simplejson.decoder import JSONDecodeError
 
 from tumblr.errors import TumblrError
 from tumblr.utils import to_unicode_or_bust, remove_nones
@@ -56,8 +55,8 @@ class TumblrAPI():
 
         try:           
             result = simplejson.loads(json)
-        except JSONDecodeError, e:
-            raise TumblrError("We got a JSONDecoder error %s.  The body we got back from Tumblr was %s" % (e, json))
+        except Exception, e:
+            raise TumblrError("We got an error %s.  The body we got back from Tumblr was %s" % (e, json))
 
         if result.has_key('meta'):
             if result['meta'].has_key('status'):
