@@ -2,13 +2,13 @@ import simplejson
 import urllib
 import urllib2
 
-from tumblr.errors import TumblrError
-from tumblr.utils import to_unicode_or_bust, remove_nones
-from tumblr.objects import *
-from tumblr.authentication import TumblrAuthenticator
+from tumblrpy.errors import TumblrError
+from tumblrpy.utils import to_unicode_or_bust, remove_nones
+from tumblrpy.objects import *
+from tumblrpy.authentication import TumblrAuthenticator
 import logging
 
-log = logging.getLogger('tumblr')
+log = logging.getLogger('tumblrpy')
 
 class TumblrAPI():
     
