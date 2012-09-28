@@ -12,7 +12,7 @@ log = logging.getLogger('tumblr')
 class TumblrAPI():
     
     authenticator = None
-    api_base = 'http://api.tumblr.com/v2'
+    api_base = 'https://api.yourtrove.com/v2'
     print_json = False
     blog_base_hostname = None
     authorized_user=None
