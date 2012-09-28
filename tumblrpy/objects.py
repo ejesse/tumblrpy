@@ -1,10 +1,10 @@
 import datetime
 import logging
 
-from tumblr.errors import TumblrError
-from tumblr.utils import dict_to_object_value
+from tumblrpy.errors import TumblrError
+from tumblrpy.utils import dict_to_object_value
 
-log = logging.getLogger('tumblr')
+log = logging.getLogger('tumblrpy')
 
 class TumblrObject(object):
     api=None

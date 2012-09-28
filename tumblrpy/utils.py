@@ -1,7 +1,7 @@
 import logging
 import datetime
 import time
-log = logging.getLogger('tumblr')
+log = logging.getLogger('tumblrpy')
 
 def dict_to_object_value(field_name,obj,dict_object,type='string',object_field_name=None,dict_field_name=None,importance=logging.WARN):
     if object_field_name is None:
